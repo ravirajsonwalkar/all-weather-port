@@ -10,10 +10,9 @@ import os
 hf_token = os.getenv("HUGGINGFACE_TOKEN")
 
 # Log in with token
-if hf_token:
-    login(hf_token)
+login(hf_token)
 
-# Initialize LLM using Gemma-2B with authentication
+# Initialize LLM using Gemma-2B
 llm = pipeline("text-generation", model="google/gemma-2b", token=hf_token)
 
 def plot_pie_chart(allocation):
