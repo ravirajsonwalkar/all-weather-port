@@ -8,5 +8,5 @@ streamlit
 matplotlib
 altair
 pandas
-torch
+torch --upgrade
 transformers
