@@ -6,7 +6,7 @@ from transformers import pipeline
 from utils.explanations import PORTFOLIO_INTRO, INPUT_EXPLANATIONS
 import os
 
-# Load LLM pipeline (Mistral 7B)
+# Load LLM pipeline (Gemma 2B)
 llm = pipeline("text-generation", model="google/gemma-2b")
 
 def plot_pie_chart(allocation):
