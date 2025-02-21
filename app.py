@@ -5,13 +5,12 @@ import pandas as pd
 from transformers import pipeline
 from utils.explanations import PORTFOLIO_INTRO, INPUT_EXPLANATIONS
 import os
+from huggingface_hub import login
 
-# Automatically retrieve the token from Hugging Face Secrets
-hf_token = os.environ.get("HUGGINGFACE_TOKEN")
+hf_token = os.getenv("HUGGINGFACE_TOKEN")
 
-# Log in using the token
 if hf_token:
-    login(token=hf_token)
+    login(hf_token)  # ✅ Correct way to call login
 else:
     raise ValueError("Hugging Face Token not found! Make sure it's set in Secrets.")
 
