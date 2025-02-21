@@ -15,7 +15,7 @@ else:
     raise ValueError("Hugging Face Token not found! Make sure it's set in Secrets.")
 
 # Initialize LLM using Gemma-2B with authentication
-llm = pipeline("text-generation", model="google/gemma-2b", token=hf_token)
+llm = pipeline("text-generation", model="google/gemma-2b", token=hf_token, device=-1)
 
 def plot_pie_chart(allocation):
     labels = ["Stocks", "Bonds", "Cash"]
