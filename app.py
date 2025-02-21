@@ -1,102 +1,103 @@
 import streamlit as st
-import os
-import sys
-
-# Add performance monitoring
-import tracemalloc
-import time
-
-# Optimize imports
-import numpy as np
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import altair as alt
 import yfinance as yf
 
-# Caching decorators
-st.set_page_config(page_title="All-Weather Portfolio Generator", page_icon="💼")
+def plot_pie_chart(allocation):
+    labels = ["Stocks", "Bonds", "Cash"]
+    sizes = [allocation.get('stocks', 60), 
+             allocation.get('bonds', 30), 
+             allocation.get('cash', 10)]
+    
+    fig, ax = plt.subplots()
+    ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
+    ax.axis("equal")
+    
+    st.pyplot(fig)
 
-# Lazy loading of heavy libraries
-@st.cache_resource
-def load_transformers():
-    from transformers import pipeline
-    return pipeline
+def plot_growth_projection(monthly_investment):
+    years = [10, 20, 30]
+    conservative_growth = [monthly_investment * 12 * y * 1.06**y for y in years]
+    expected_growth = [monthly_investment * 12 * y * 1.08**y for y in years]
+    
+    df = pd.DataFrame({
+        "Years": years,
+        "Conservative Growth (6%)": conservative_growth,
+        "Expected Growth (8%)": expected_growth
+    })
+    
+    chart = alt.Chart(df).mark_line(point=True).encode(
+        x=alt.X("Years:O", title="Investment Duration (Years)"),
+        y=alt.Y("value:Q", title="Projected Portfolio Value ($)"),
+        color="variable:N"
+    ).properties(title="Investment Growth Projection")
+    
+    st.altair_chart(chart, use_container_width=True)
 
-@st.cache_resource
-def load_openai():
-    from langchain_community.llms import OpenAI
-    return OpenAI
-
-# Performance tracking decorator
-def track_performance(func):
-    def wrapper(*args, **kwargs):
-        tracemalloc.start()
-        start_time = time.time()
-        
-        result = func(*args, **kwargs)
-        
-        current, peak = tracemalloc.get_traced_memory()
-        st.write(f"Memory usage: Current {current/10**6}MB, Peak {peak/10**6}MB")
-        st.write(f"Time taken: {time.time() - start_time} seconds")
-        
-        tracemalloc.stop()
-        return result
-    return wrapper
-
-# Safe portfolio generation
-def safe_portfolio_generation(age, risk, monthly_invest):
-    try:
-        # Use cached resource
-        manager = st.cache_resource(AllWeatherPortfolioManager)()
-        return manager.generate_portfolio(age, risk, monthly_invest)
-    except Exception as e:
-        st.error(f"Portfolio generation failed: {e}")
-        # Provide a default conservative portfolio
-        return {
-            "allocation": {"stocks": 50, "bonds": 40, "cash": 10},
-            "market_analysis": {"volatility": 15, "trend": "neutral"}
+def generate_portfolio(age, risk, monthly_investment):
+    # Simple portfolio allocation logic
+    allocations = {
+        "Low": {"stocks": 40, "bonds": 50, "cash": 10},
+        "Moderate": {"stocks": 60, "bonds": 30, "cash": 10},
+        "High": {"stocks": 80, "bonds": 15, "cash": 5}
+    }
+    
+    # Adjust allocation based on age
+    allocation = allocations.get(risk, allocations["Moderate"])
+    age_factor = max(0.5, (100 - age) / 100)
+    
+    return {
+        "allocation": {
+            "stocks": allocation["stocks"] * age_factor,
+            "bonds": allocation["bonds"] + (allocation["stocks"] * (1 - age_factor)) * 0.7,
+            "cash": allocation["cash"] + (allocation["stocks"] * (1 - age_factor)) * 0.3
+        },
+        "market_analysis": {
+            "volatility": 15,
+            "trend": "Neutral"
         }
+    }
 
 def main():
-    st.title("All-Weather Portfolio Generator")
-
-    # Use expanders to reduce initial page load
-    with st.expander("What is an All-Weather Portfolio?"):
-        st.markdown(PORTFOLIO_INTRO)
-
-    # Input Section with Caching
+    st.title("Simple Portfolio Generator")
+    
+    # Input section
     col1, col2 = st.columns(2)
+    
     with col1:
-        age = st.number_input("Your Age", min_value=18, max_value=100, value=26, key="age")
-        monthly_investment = st.number_input("Monthly Investment ($)", min_value=100, value=1500, step=100, key="monthly_investment")
-
+        age = st.number_input("Your Age", min_value=18, max_value=100, value=30)
+        monthly_investment = st.number_input("Monthly Investment ($)", min_value=100, value=1000)
+    
     with col2:
-        risk_tolerance = st.selectbox("Risk Tolerance", ["Low", "Moderate", "High"], index=2, key="risk_tolerance")
-
-    # Generate Portfolio Button with Session State
+        risk_tolerance = st.selectbox("Risk Tolerance", ["Low", "Moderate", "High"])
+    
+    # Generate Portfolio Button
     if st.button("Generate Portfolio"):
-        with st.spinner("Creating your personalized portfolio..."):
-            result = safe_portfolio_generation(age, risk_tolerance, monthly_investment)
+        with st.spinner("Creating your portfolio..."):
+            result = generate_portfolio(age, risk_tolerance, monthly_investment)
             
-            # Display results
-            if result:
-                st.success("Your All-Weather Portfolio Plan is Ready!")
-                
-                # Market Analysis Section
-                st.subheader("Market Analysis")
-                st.markdown(f"""
-                - **Volatility Level**: {result["market_analysis"].get("volatility", "N/A"):.2f}%
-                - **Market Trend**: {result["market_analysis"].get("trend", "Neutral").title()}
-                """)
-
-                # Portfolio Allocation Visualization
-                plot_pie_chart(result.get("allocation", {}))
-                plot_growth_projection(monthly_investment)
-
-# Performance Monitoring
-@track_performance
-def run_app():
-    main()
+            st.success("Portfolio Generated!")
+            
+            # Market Analysis
+            st.subheader("Market Analysis")
+            st.write(f"Volatility: {result['market_analysis']['volatility']}%")
+            st.write(f"Market Trend: {result['market_analysis']['trend']}")
+            
+            # Portfolio Allocation
+            st.subheader("Portfolio Allocation")
+            plot_pie_chart(result['allocation'])
+            
+            # Growth Projection
+            st.subheader("Investment Growth Projection")
+            plot_growth_projection(monthly_investment)
+            
+            # Additional Details
+            st.subheader("Portfolio Details")
+            st.write(f"Stocks: {result['allocation']['stocks']:.1f}%")
+            st.write(f"Bonds: {result['allocation']['bonds']:.1f}%")
+            st.write(f"Cash: {result['allocation']['cash']:.1f}%")
 
 if __name__ == "__main__":
-    run_app()
+    main()
