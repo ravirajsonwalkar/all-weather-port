@@ -1,11 +1,34 @@
 import streamlit as st
+import sys
+import os
+
+import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import altair as alt
+import yfinance as yf
+from typing import Dict
+
+import streamlit as st
+import matplotlib.pyplot as plt
 import pandas as pd
 from transformers import pipeline
 from utils.explanations import PORTFOLIO_INTRO, INPUT_EXPLANATIONS
 import os
 from huggingface_hub import login
+
+st.cache_resource 
+st.cache_data
+
+@st.cache_resource
+def load_transformers():
+    from transformers import pipeline
+    return pipeline
+
+@st.cache_resource
+def load_openai():
+    from langchain_community.llms import OpenAI
+    return OpenAI
 
 hf_token = os.getenv("HUGGINGFACE_TOKEN")
 
@@ -54,6 +77,22 @@ def analyze_market():
     return response[0]['generated_text']
 
 def main():
+    # Add loading indicators and error handling
+    st.set_page_config(
+        page_title="All-Weather Portfolio Generator", 
+        page_icon="💼",
+        initial_sidebar_state="collapsed"
+    )
+
+    # Use st.spinner for long-running tasks
+    with st.spinner('Initializing portfolio generator...'):
+        try:
+            # Lazy load heavy components
+            portfolio_manager = st.cache_resource(AllWeatherPortfolioManager)()
+        except Exception as e:
+            st.error(f"Initialization Error: {e}")
+            return
+    
     print("✅ Streamlit app is running...")
 
     st.title("All-Weather Portfolio Generator")
