@@ -4,91 +4,144 @@ import numpy as np
 import matplotlib.pyplot as plt
 import altair as alt
 
-def plot_pie_chart(allocation):
-    labels = ["Stocks", "Bonds", "Cash"]
-    sizes = [allocation.get('stocks', 60), 
-             allocation.get('bonds', 30), 
-             allocation.get('cash', 10)]
-    
-    fig, ax = plt.subplots()
-    ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
-    ax.axis("equal")
-    
-    st.pyplot(fig)
-
-def plot_growth_projection(monthly_investment):
-    years = [10, 20, 30]
-    conservative_growth = [monthly_investment * 12 * y * 1.06**y for y in years]
-    expected_growth = [monthly_investment * 12 * y * 1.08**y for y in years]
-    
-    df = pd.DataFrame({
-        "Years": years,
-        "Conservative Growth (6%)": conservative_growth,
-        "Expected Growth (8%)": expected_growth
-    })
-    
-    chart = alt.Chart(df.melt('Years')).mark_line(point=True).encode(
-        x=alt.X('Years:O', title="Investment Duration (Years)"),
-        y=alt.Y('value:Q', title="Projected Portfolio Value ($)"),
-        color='variable:N'
-    ).properties(title="Investment Growth Projection")
-    
-    st.altair_chart(chart, use_container_width=True)
-
-def generate_portfolio(age, risk, monthly_investment):
-    allocations = {
-        "Low": {"stocks": 40, "bonds": 50, "cash": 10},
-        "Moderate": {"stocks": 60, "bonds": 30, "cash": 10},
-        "High": {"stocks": 80, "bonds": 15, "cash": 5}
+def all_weather_portfolio_strategy(age, risk_tolerance, monthly_investment):
+    """
+    All-Weather Portfolio Strategy Based on Ray Dalio's Principles
+    """
+    # Base allocations inspired by All-Weather Portfolio concept
+    base_allocation = {
+        "Stocks": 30,           # Domestic & International Equities
+        "Long-Term Bonds": 40,  # Government Bonds
+        "Intermediate Bonds": 15,  # Corporate Bonds
+        "Gold": 7.5,            # Inflation hedge
+        "Commodities": 7.5      # Inflation protection
     }
     
-    allocation = allocations.get(risk, allocations["Moderate"])
-    age_factor = max(0.5, (100 - age) / 100)
+    # Risk and age adjustment
+    risk_multipliers = {
+        "Low": 0.7,
+        "Moderate": 1.0,
+        "High": 1.3
+    }
+    
+    # Age-based risk reduction
+    age_risk_factor = max(0.5, (100 - age) / 100)
+    
+    # Adjust allocation based on risk tolerance and age
+    adjusted_allocation = {
+        asset: round(weight * risk_multipliers.get(risk_tolerance, 1.0) * age_risk_factor, 1)
+        for asset, weight in base_allocation.items()
+    }
+    
+    # Normalize to ensure 100%
+    total = sum(adjusted_allocation.values())
+    normalized_allocation = {
+        asset: round((weight / total) * 100, 1)
+        for asset, weight in adjusted_allocation.items()
+    }
+    
+    # Projected growth calculations
+    def calculate_growth(rate):
+        return [
+            round(monthly_investment * 12 * years * (1 + rate)**years, 2)
+            for years in [10, 20, 30]
+        ]
     
     return {
-        "allocation": {
-            "stocks": round(allocation["stocks"] * age_factor, 1),
-            "bonds": round(allocation["bonds"] + (allocation["stocks"] * (1 - age_factor)) * 0.7, 1),
-            "cash": round(allocation["cash"] + (allocation["stocks"] * (1 - age_factor)) * 0.3, 1)
+        "allocation": normalized_allocation,
+        "investment_projections": {
+            "conservative_6%": calculate_growth(0.06),
+            "expected_8%": calculate_growth(0.08)
         },
-        "market_analysis": {
-            "volatility": 15,
-            "trend": "Neutral"
-        }
+        "key_principles": [
+            "Balanced across economic conditions",
+            "Reduced portfolio volatility",
+            "Protection against inflation and market downturns"
+        ]
     }
 
 def main():
-    st.title("Simple Portfolio Generator")
+    st.title("🌐 All-Weather Portfolio Generator")
     
+    # Sidebar for explanation
+    st.sidebar.markdown("""
+    ### 🌍 All-Weather Portfolio Concept
+    Developed by Ray Dalio, this strategy aims to:
+    - Perform well in any economic condition
+    - Balance risk across different asset classes
+    - Provide consistent returns
+    """)
+    
+    # Input columns
     col1, col2 = st.columns(2)
     
     with col1:
-        age = st.number_input("Your Age", min_value=18, max_value=100, value=30)
+        age = st.number_input("Your Age", min_value=18, max_value=100, value=35)
         monthly_investment = st.number_input("Monthly Investment ($)", min_value=100, value=1000)
     
     with col2:
-        risk_tolerance = st.selectbox("Risk Tolerance", ["Low", "Moderate", "High"])
+        risk_tolerance = st.selectbox(
+            "Risk Tolerance", 
+            ["Low", "Moderate", "High"], 
+            index=1
+        )
     
-    if st.button("Generate Portfolio"):
-        with st.spinner("Creating your portfolio..."):
-            result = generate_portfolio(age, risk_tolerance, monthly_investment)
+    # Generate Portfolio Button
+    if st.button("Generate All-Weather Portfolio"):
+        with st.spinner("Crafting your resilient portfolio..."):
+            result = all_weather_portfolio_strategy(age, risk_tolerance, monthly_investment)
             
-            st.success("Portfolio Generated!")
+            # Portfolio Allocation Visualization
+            st.header("🏦 Portfolio Allocation")
+            allocation_df = pd.DataFrame.from_dict(
+                result['allocation'], 
+                orient='index', 
+                columns=['Percentage']
+            ).reset_index()
+            allocation_df.columns = ['Asset', 'Allocation']
             
-            st.subheader("Market Analysis")
-            st.write(f"Volatility: {result['market_analysis']['volatility']}%")
-            st.write(f"Market Trend: {result['market_analysis']['trend']}")
+            # Pie Chart
+            fig, ax = plt.subplots()
+            ax.pie(
+                allocation_df['Allocation'], 
+                labels=allocation_df['Asset'], 
+                autopct='%1.1f%%'
+            )
+            ax.set_title("Asset Class Distribution")
+            st.pyplot(fig)
             
-            st.subheader("Portfolio Allocation")
-            plot_pie_chart(result['allocation'])
+            # Detailed Allocation Table
+            st.table(allocation_df.set_index('Asset'))
             
-            st.subheader("Investment Growth Projection")
-            plot_growth_projection(monthly_investment)
+            # Investment Projections
+            st.header("📈 Long-Term Projection")
+            projection_df = pd.DataFrame({
+                'Duration': ['10 Years', '20 Years', '30 Years'],
+                'Conservative (6%)': result['investment_projections']['conservative_6%'],
+                'Expected (8%)': result['investment_projections']['expected_8%']
+            })
             
-            st.subheader("Portfolio Details")
-            st.write(f"Stocks: {result['allocation']['stocks']}%")
-            st.write(f"Bonds: {result['allocation']['bonds']}%")
-            st.write(f"Cash: {result['allocation']['cash']}%")
+            # Line Chart for Projections
+            projection_chart = alt.Chart(projection_df.melt('Duration')).mark_line(point=True).encode(
+                x='Duration:N',
+                y='value:Q',
+                color='variable:N',
+                tooltip=['Duration', 'value']
+            ).properties(title='Investment Growth Projection')
+            
+            st.altair_chart(projection_chart, use_container_width=True)
+            
+            # Key Principles
+            st.header("🛡️ Portfolio Principles")
+            for principle in result['key_principles']:
+                st.write(f"- {principle}")
+            
+            # Disclaimer
+            st.markdown("""
+            ### ⚠️ Disclaimer
+            This is an educational tool. Always consult a financial advisor 
+            before making investment decisions.
+            """)
 
 if __name__ == "__main__":
     main()
