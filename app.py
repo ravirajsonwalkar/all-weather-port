@@ -71,21 +71,39 @@ def main():
     
     # Input Section
     st.header("Create Your Portfolio")
-    
+
     with st.expander("Understanding the Inputs"):
         for param, explanation in INPUT_EXPLANATIONS.items():
             st.write(f"**{param.title()}**: {explanation}")
     
-    # Get user inputs
     col1, col2 = st.columns(2)
     with col1:
         age = st.number_input("Your Age", min_value=18, max_value=100, value=26)
-        monthly_investment = st.number_input("Monthly Investment ($)", 
-            min_value=100, value=1500, step=100)
+        monthly_investment = st.number_input("Monthly Investment ($)", min_value=100, value=1500, step=100)
     
     with col2:
-        risk_tolerance = st.selectbox("Risk Tolerance", 
-            ["Low", "Moderate", "High"], index=2)
+        risk_tolerance = st.selectbox("Risk Tolerance", ["Low", "Moderate", "High"], index=2)
+
+    # ✅ Add a "Generate Portfolio" button
+    if st.button("Generate Portfolio"):
+        with st.spinner("Creating your personalized portfolio..."):
+            portfolio_manager = AllWeatherPortfolioManager()
+            try:
+                result = portfolio_manager.generate_portfolio(
+                    age=age,
+                    risk_tolerance=risk_tolerance,
+                    monthly_investment=monthly_investment
+                )
+    
+                if not result or "summary" not in result:
+                    st.error("❌ Failed to generate portfolio. Please try again.")
+                    return
+            except Exception as e:
+                st.error(f"❌ Error generating portfolio: {e}")
+                return
+    
+            st.success("Your All-Weather Portfolio Plan is Ready!")
+
     
     # Market Analysis Explanation
     st.subheader("📊 What is Market Analysis?")
