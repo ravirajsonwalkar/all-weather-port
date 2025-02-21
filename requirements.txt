@@ -1,0 +1,12 @@
+streamlit==1.24.0
+langchain==0.0.335
+python-dotenv==1.0.0
+openai==1.8.0
+transformers
+llama-cpp-python
+streamlit
+matplotlib
+altair
+pandas
+torch
+transformers
