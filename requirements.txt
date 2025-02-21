@@ -4,9 +4,7 @@ python-dotenv==1.0.0
 openai==1.8.0
 transformers
 llama-cpp-python
-streamlit
 matplotlib
 altair
 pandas
-torch --upgrade
-transformers
+torch>=2.0.0
