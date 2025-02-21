@@ -4,17 +4,15 @@ from typing import Dict
 from transformers import pipeline
 
 class MarketAnalysisAgent:
+    @st.cache_resource
     def __init__(self):
-        self.llm = pipeline("text-generation", model="mistralai/Mistral-7B-v0.1")
+        # Use a smaller, faster model if possible
+        self.llm = pipeline("text-generation", 
+                            model="distilgpt2",  # Lighter model
+                            device_map="auto")   # Automatic device placement
 
+    @st.cache_data(ttl=3600)  # Cache market analysis for 1 hour
     def analyze_market(self):
-        prompt = "Analyze the current stock market trend based on historical performance."
-        response = self.llm(prompt, max_length=100, do_sample=True)
-        return response[0]['generated_text']
-
-        
-    def analyze_market(self) -> Dict:
-        """Analyze current market conditions"""
         try:
             spy = yf.Ticker("SPY")
             data = spy.history(period="1mo")
@@ -23,8 +21,8 @@ class MarketAnalysisAgent:
                 "trend": "bullish" if data['Close'][-1] > data['Close'][0] else "bearish"
             }
         except Exception as e:
-            return {"error": f"Could not fetch market data: {str(e)}"}
-
+            return {"error": f"Market data unavailable: {str(e)}"}
+            
 class PortfolioAgent:
     def __init__(self):
         self.llm = OpenAI(temperature=0.2)
@@ -70,10 +68,15 @@ class ImplementationAgent:
         }
 
 class AllWeatherPortfolioManager:
+    @st.cache_resource
     def __init__(self):
-        self.market_agent = MarketAnalysisAgent()
-        self.portfolio_agent = PortfolioAgent()
-        self.implementation_agent = ImplementationAgent()
+        try:
+            # Add timeouts and error handling for model loading
+            self.market_agent = MarketAnalysisAgent()
+            self.portfolio_agent = PortfolioAgent()
+            self.implementation_agent = ImplementationAgent()
+        except Exception as e:
+            st.error(f"Failed to initialize agents: {e}")
     
     def generate_portfolio(self, age: int, risk_tolerance: str, monthly_investment: float) -> Dict:
         """Generate a personalized portfolio strategy"""
