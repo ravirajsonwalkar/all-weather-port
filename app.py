@@ -7,7 +7,7 @@ from utils.explanations import PORTFOLIO_INTRO, INPUT_EXPLANATIONS
 import os
 
 # Load LLM pipeline (Mistral 7B)
-llm = pipeline("text-generation", model="mistralai/Mistral-7B-v0.1")
+llm = pipeline("text-generation", model="HuggingFaceH4/zephyr-7b-beta")
 
 def plot_pie_chart(allocation):
     labels = ["Stocks", "Bonds", "Cash"]
