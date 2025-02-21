@@ -6,22 +6,24 @@ import altair as alt
 
 def all_weather_portfolio_strategy(age, risk_tolerance, monthly_investment):
     """
-    All-Weather Portfolio Strategy Based on Ray Dalio's Principles
+    Comprehensive All-Weather Portfolio Strategy
     """
-    # Base allocations inspired by All-Weather Portfolio concept
+    # Detailed asset allocation based on Ray Dalio's principles
     base_allocation = {
-        "Stocks": 30,           # Domestic & International Equities
-        "Long-Term Bonds": 40,  # Government Bonds
-        "Intermediate Bonds": 15,  # Corporate Bonds
-        "Gold": 7.5,            # Inflation hedge
-        "Commodities": 7.5      # Inflation protection
+        "US Stocks": 15,            # Domestic large-cap equities
+        "International Stocks": 10, # Global market exposure
+        "Long-Term US Treasuries": 40,  # Protection during economic downturns
+        "Intermediate-Term Treasuries": 15,  # Balanced fixed income
+        "Treasury Inflation-Protected Securities (TIPS)": 7.5,  # Inflation protection
+        "Gold": 7.5,                # Ultimate hedge against uncertainty
+        "Commodities": 5            # Inflation and economic cycle hedge
     }
     
-    # Risk and age adjustment
+    # Risk and age adjustment factors
     risk_multipliers = {
-        "Low": 0.7,
+        "Low": 0.8,
         "Moderate": 1.0,
-        "High": 1.3
+        "High": 1.2
     }
     
     # Age-based risk reduction
@@ -53,23 +55,52 @@ def all_weather_portfolio_strategy(age, risk_tolerance, monthly_investment):
             "conservative_6%": calculate_growth(0.06),
             "expected_8%": calculate_growth(0.08)
         },
-        "key_principles": [
-            "Balanced across economic conditions",
-            "Reduced portfolio volatility",
-            "Protection against inflation and market downturns"
+        "economic_scenarios": [
+            {
+                "name": "Rising Growth & Rising Inflation",
+                "description": "Economy expanding, prices increasing",
+                "best_performers": ["Commodities", "Stocks", "TIPS"]
+            },
+            {
+                "name": "Rising Growth & Falling Inflation",
+                "description": "Economic expansion with stable prices",
+                "best_performers": ["Stocks", "Intermediate Bonds"]
+            },
+            {
+                "name": "Falling Growth & Rising Inflation",
+                "description": "Economic slowdown with increasing prices",
+                "best_performers": ["Gold", "TIPS", "Commodities"]
+            },
+            {
+                "name": "Falling Growth & Falling Inflation",
+                "description": "Economic contraction with decreasing prices",
+                "best_performers": ["Long-Term Treasuries"]
+            }
         ]
     }
 
 def main():
-    st.title("🌐 All-Weather Portfolio Generator")
+    st.set_page_config(page_title="All-Weather Portfolio Generator", page_icon="💼", layout="wide")
     
-    # Sidebar for explanation
+    st.title("🌐 Comprehensive All-Weather Portfolio Generator")
+    
+    # Detailed Sidebar Explanation
     st.sidebar.markdown("""
-    ### 🌍 All-Weather Portfolio Concept
-    Developed by Ray Dalio, this strategy aims to:
-    - Perform well in any economic condition
-    - Balance risk across different asset classes
-    - Provide consistent returns
+    ## 🌍 The All-Weather Portfolio: A Deep Dive
+
+    ### 🏛️ Origin
+    Developed by Ray Dalio of Bridgewater Associates, the All-Weather Portfolio is a revolutionary investment strategy designed to perform consistently across different economic conditions.
+
+    ### 🌈 Core Philosophy
+    - **Diversification Beyond Traditional Approaches**
+    - **Balanced Exposure to Different Economic Environments**
+    - **Risk Parity: Balancing Risk, Not Just Allocation**
+
+    ### 🛡️ Key Principles
+    1. No single economic scenario should devastate the portfolio
+    2. Spread investments across assets that react differently to economic changes
+    3. Protect against both inflation and deflation
+    4. Maintain steady growth regardless of market conditions
     """)
     
     # Input columns
@@ -91,30 +122,52 @@ def main():
         with st.spinner("Crafting your resilient portfolio..."):
             result = all_weather_portfolio_strategy(age, risk_tolerance, monthly_investment)
             
-            # Portfolio Allocation Visualization
-            st.header("🏦 Portfolio Allocation")
+            # Portfolio Allocation Section
+            st.header("🏦 Detailed Portfolio Allocation")
             allocation_df = pd.DataFrame.from_dict(
                 result['allocation'], 
                 orient='index', 
-                columns=['Percentage']
+                columns=['Allocation']
             ).reset_index()
             allocation_df.columns = ['Asset', 'Allocation']
             
             # Pie Chart
-            fig, ax = plt.subplots()
+            fig, ax = plt.subplots(figsize=(10, 6))
             ax.pie(
                 allocation_df['Allocation'], 
                 labels=allocation_df['Asset'], 
                 autopct='%1.1f%%'
             )
-            ax.set_title("Asset Class Distribution")
+            ax.set_title("Asset Class Distribution", fontsize=16)
             st.pyplot(fig)
             
-            # Detailed Allocation Table
-            st.table(allocation_df.set_index('Asset'))
+            # Detailed Allocation Table with Explanations
+            st.subheader("🔍 Asset Class Breakdown")
+            asset_details = {
+                "US Stocks": "Domestic large-cap equities providing growth potential",
+                "International Stocks": "Global market exposure for broader economic participation",
+                "Long-Term US Treasuries": "Safe-haven assets that perform well during economic downturns",
+                "Intermediate-Term Treasuries": "Balanced fixed income with moderate interest rate sensitivity",
+                "Treasury Inflation-Protected Securities (TIPS)": "Protects against inflation by adjusting principal with CPI",
+                "Gold": "Ultimate hedge against economic uncertainty and currency devaluation",
+                "Commodities": "Natural hedge against inflation and economic cycle variations"
+            }
+            
+            detailed_allocation = allocation_df.copy()
+            detailed_allocation['Description'] = detailed_allocation['Asset'].map(asset_details)
+            st.dataframe(detailed_allocation)
+            
+            # Economic Scenarios Section
+            st.header("🌍 Economic Scenario Analysis")
+            for scenario in result['economic_scenarios']:
+                st.markdown(f"""
+                ### {scenario['name']}
+                **Description**: {scenario['description']}
+                **Best Performing Assets**: {', '.join(scenario['best_performers'])}
+                """)
             
             # Investment Projections
-            st.header("📈 Long-Term Projection")
+            st.header("📈 Long-Term Investment Projection")
             projection_df = pd.DataFrame({
                 'Duration': ['10 Years', '20 Years', '30 Years'],
                 'Conservative (6%)': result['investment_projections']['conservative_6%'],
@@ -131,16 +184,22 @@ def main():
             
             st.altair_chart(projection_chart, use_container_width=True)
             
-            # Key Principles
-            st.header("🛡️ Portfolio Principles")
-            for principle in result['key_principles']:
-                st.write(f"- {principle}")
+            # Key Takeaways
+            st.header("💡 Key Investment Insights")
+            st.markdown("""
+            1. **Diversification is Key**: No single asset dominates the portfolio
+            2. **Balanced Risk Exposure**: Performs in multiple economic scenarios
+            3. **Long-Term Perspective**: Focuses on consistent growth over time
+            4. **Adaptive Strategy**: Adjusts with age and risk tolerance
+            """)
             
             # Disclaimer
             st.markdown("""
-            ### ⚠️ Disclaimer
-            This is an educational tool. Always consult a financial advisor 
-            before making investment decisions.
+            ### ⚠️ Important Disclaimer
+            - This is an educational tool for illustrative purposes
+            - Always consult a certified financial advisor
+            - Past performance does not guarantee future results
+            - Individual financial situations vary
             """)
 
 if __name__ == "__main__":
