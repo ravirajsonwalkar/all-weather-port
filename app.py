@@ -6,12 +6,14 @@ from transformers import pipeline
 from utils.explanations import PORTFOLIO_INTRO, INPUT_EXPLANATIONS
 import os
 
-# Load Hugging Face token from environment
-hf_token = os.getenv("HUGGINGFACE_TOKEN")
+# Automatically retrieve the token from Hugging Face Secrets
+hf_token = os.environ.get("HUGGINGFACE_TOKEN")
 
-# Log in with token
+# Log in using the token
 if hf_token:
-    login(token=hf_token)  # ✅ Ensure the function uses `token=hf_token`
+    login(token=hf_token)
+else:
+    raise ValueError("Hugging Face Token not found! Make sure it's set in Secrets.")
 
 # Initialize LLM using Gemma-2B with authentication
 llm = pipeline("text-generation", model="google/gemma-2b", token=hf_token)
