@@ -6,8 +6,15 @@ from transformers import pipeline
 from utils.explanations import PORTFOLIO_INTRO, INPUT_EXPLANATIONS
 import os
 
-# Load LLM pipeline (Gemma 2B)
-llm = pipeline("text-generation", model="google/gemma-2b")
+# Load Hugging Face token from environment
+hf_token = os.getenv("HUGGINGFACE_TOKEN")
+
+# Log in with token
+if hf_token:
+    login(hf_token)
+
+# Initialize LLM using Gemma-2B with authentication
+llm = pipeline("text-generation", model="google/gemma-2b", token=hf_token)
 
 def plot_pie_chart(allocation):
     labels = ["Stocks", "Bonds", "Cash"]
