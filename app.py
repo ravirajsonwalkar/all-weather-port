@@ -1,3 +1,23 @@
+# Add at the start of app.py
+import tracemalloc
+import time
+
+def track_performance(func):
+    def wrapper(*args, **kwargs):
+        tracemalloc.start()
+        start_time = time.time()
+        
+        result = func(*args, **kwargs)
+        
+        current, peak = tracemalloc.get_traced_memory()
+        print(f"Current memory usage: {current / 10**6}MB")
+        print(f"Peak memory usage: {peak / 10**6}MB")
+        print(f"Time taken: {time.time() - start_time} seconds")
+        
+        tracemalloc.stop()
+        return result
+    return wrapper
+
 import streamlit as st
 import sys
 import os
