@@ -195,6 +195,13 @@ def main():
     st.set_page_config(page_title="All-Weather Portfolio Generator", page_icon="💼", layout="wide")
     
     st.title("🌐 Comprehensive All-Weather Portfolio Generator")
+
+    # Add project creator information
+    st.markdown("""
+    **Project Created By:** [Raviraj Sonwalkar](https://www.linkedin.com/in/raviraj-sonwalkar/)
+    
+    **Contact:** raviwork2802@gmail.com | alphaport99@gmail.com
+    """, unsafe_allow_html=True)
     
     # Detailed Sidebar Explanation
     st.sidebar.markdown("""
